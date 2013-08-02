@@ -77,6 +77,13 @@
       (is (thrown? clojure.lang.ExceptionInfo
                    (dorun (event-stream {:graph {:a [{:b {:delay [:unspecified]}}]}
                                          :delay-ops delay-ops}
-                                        [{:rtime 0 :state :a}])))))))
+                                        [{:rtime 0 :state :a}])))))
+    (testing "Mutliple destination states"
+      (is (= [[0 :a] [1 :b] [1 :c]]
+             (->> (event-stream {:graph {:a [{:b {:delay [:constant 1]}}
+                                             {:c {:delay [:constant 1]}}]}
+                                 :delay-ops delay-ops}
+                                [{:rtime 0 :state :a}])
+                  (map simplify)))))))
 
 
