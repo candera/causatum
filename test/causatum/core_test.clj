@@ -46,7 +46,7 @@
 (deftest event-stream-tests
   (testing "Event stream generation."
     (testing "Null model and input stream produces an empty event stream."
-      (is (empty? (event-stream {} [])) ))
+      (is (empty? (event-stream {:graph {}} [])) ))
     (testing "Simple linear model"
       (is (= [[0 :a] [0 :b]]
              (->> (event-stream {:graph {:a [{:b {}}]}}
