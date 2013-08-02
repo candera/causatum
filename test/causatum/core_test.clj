@@ -63,6 +63,22 @@
              (->> (event-stream {:graph {:a [{:a {}}]}} [{:rtime 0 :state :a}])
                   (take 1000)
                   (map simplify)))))
+    (testing "Binding dg/*rnd*"
+      (let [model {:graph {:a [{:a {:weight 1}
+                                :b {:weight 3}}]
+                           :b [{:a {:weight 1}
+                                :b {:weight 3}}]}}
+            seeds [{:rtime 0 :state :a}]]
+        (testing  "makes the stream stable if the seed is the same"
+          (is (= (binding [dg/*rnd* (java.util.Random. 42)]
+                   (doall (take 100 (event-stream model seeds))))
+                 (binding [dg/*rnd* (java.util.Random. 42)]
+                   (doall (take 100 (event-stream model seeds)))))))
+        (testing "produces a difference sequence for different seeds"
+          (is (not (= (binding [dg/*rnd* (java.util.Random. 42)]
+                        (doall (take 100 (event-stream model seeds))))
+                      (binding [dg/*rnd* (java.util.Random. 24)]
+                        (doall (take 100 (event-stream model seeds))))))))))
     (testing "Model with weights"
       (is (plausible? {:a [0.25 0.1]
                        :b [0.75 0.1]}
