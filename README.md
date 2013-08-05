@@ -20,7 +20,8 @@ on stochastic state machines.
                          :c {:weight 2 :delay [:constant 2]}}]
                     :b [{:a {:weight 0.5 :delay [:constant 3]}
                          :b {:weight 3.14 :delay [:constant 1]}
-                         :c {:weight 1 :delay [:constant 3]}}]}})
+                         :c {:weight 1 :delay [:constant 3]}}]}
+            :delay-ops {:constant (fn [rtime t] t)}})
 ```
 
 * Use it to produce a sequence of timestamped events from a sequence
@@ -29,6 +30,12 @@ on stochastic state machines.
 ```clojure
 (require '[causatum.event-streams :as es])
 (es/event-stream model [{:state :a :rtime 0}])
+
+;; Produces a random stream that might look like this:
+[{:state :a, :rtime 0}
+ {:state :b, :rtime 1, :delay [:constant 1], :weight 1}
+ {:state :b, :rtime 2, :delay [:constant 1], :weight 3.14}
+ {:state :c, :rtime 5, :delay [:constant 3], :weight 1}]
 ```
 
 * [Profit](http://knowyourmeme.com/memes/profit)
@@ -183,7 +190,46 @@ them. It also becomes possible to manipulate models using the same
 techniques we apply to other data. Functions for manipulating models
 to iterate towards a goal are defined in the `causatum.evolution`
 namespace. For an interesting example of that code, see
-[doc/evolution-example.clj]().
+[doc/evolution-example.clj](https://github.com/candera/causatum/blob/master/doc/evolution-example.clj).
+
+## Advanced Usage
+
+### Event Constructors
+
+Models may contain a `:event-ctor` key. If present, its value must be
+a function of two arguments, the _event constructor_. The event
+constructor will be invoked whenever an event is created, and will be
+passed the outbound event and the candidate successor event. The
+return value will be used as the actual successor event.
+
+One handy use for event constructors is to propagate context
+information along a causal chain. For instance, we might seed a model
+of user behavior with an event stream representing user arrivals, and
+tag the user arrival events with an identifier. The event constructor
+could then propagate that user ID through all events in a causal
+chain. Say, something like this:
+
+```clojure
+(->> (event-stream model
+                   (map
+                    (fn [rtime] {:state :home
+                                 :rtime rtime
+                                 :user-id rtime})
+                    (iterate inc 0)))
+     (drop 10000)
+     (map #(select-keys % [:state :rtime :user-id]))
+     (take 5))
+
+;; =>
+
+({:user-id 2559, :rtime 2559, :state :home}
+ {:user-id 2557, :rtime 2559, :state :page1}
+ {:user-id 2553, :rtime 2559, :state :page1}
+ {:user-id 2552, :rtime 2559, :state :page1}
+ {:user-id 2558, :rtime 2559, :state :home})
+```
+
+And of course you can propage the information however you like.
 
 ## License
 
