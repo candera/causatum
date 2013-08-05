@@ -1,4 +1,4 @@
-(defproject causatum "0.1.0"
+(defproject org.craigandera/causatum "0.1.0"
   :description "A library to stochastically generate streams of events from state machines."
   :url "https://github.com/candera/causatum"
   :license {:name "Eclipse Public License"
