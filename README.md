@@ -197,10 +197,11 @@ namespace. For an interesting example of that code, see
 ### Event Constructors
 
 Models may contain a `:event-ctor` key. If present, its value must be
-a function of two arguments, the _event constructor_. The event
-constructor will be invoked whenever an event is created, and will be
-passed the outbound event and the candidate successor event. The
-return value will be used as the actual successor event.
+a function: the _event constructor_. The event constructor will be
+invoked whenever an event is created, and will be passed the outbound
+event and the candidate successor event. The return value will be used
+as the actual successor event. The default implementation just uses
+the candidate successor event.
 
 One handy use for event constructors is to propagate context
 information along a causal chain. For instance, we might seed a model
@@ -212,6 +213,9 @@ chain. Say, something like this:
 ```clojure
 (->> (event-stream model
                    (map
+                    ;; User ID is just their arrival time.
+                    ;; A new user arrives at the home page
+                    ;; every one second
                     (fn [rtime] {:state :home
                                  :rtime rtime
                                  :user-id rtime})
