@@ -257,6 +257,6 @@ causatum. Feedback welcome.
 
 ## License
 
-Copyright © 2013 Crag Andera
+Copyright © 2013 Craig Andera
 
 Distributed under the Eclipse Public License, the same as Clojure.
