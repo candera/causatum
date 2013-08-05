@@ -1,9 +1,39 @@
 # causatum
 
+> cau·sa·tum noun \kau̇ˈzätəm, kȯˈzāt-\
+> pl causa·ta
+>
+> : something that is caused : effect
+
+[Merriam-Webster Online Dictionary](http://www.merriam-webster.com/dictionary/causatum)
+
 A Clojure library designed to generate streams of timed events based
 on stochastic state machines.
 
-# Motivation (aka "Huh?")
+## Quick Start
+
+* Add `[org.craigandera/causatum "0.1.0"]` to your dependencies in `project.clj`.
+* Create a simple model:
+
+```clojure
+(def model {:graph {:a [{:b {:weight 1 :delay [:constant 1]}
+                         :c {:weight 2 :delay [:constant 2]}}]
+                    :b [{:a {:weight 0.5 :delay [:constant 3]}
+                         :b {:weight 3.14 :delay [:constant 1]}
+                         :c {:weight 1 :delay [:constant 3]}}]}})
+```
+
+* Use it to produce a sequence of timestamped events from a sequence
+  of "seed" events.
+
+```clojure
+(require '[causatum.event-streams :as es])
+(es/event-stream model [{:state :a :rtime 0}])
+```
+
+* [Profit](http://knowyourmeme.com/memes/profit)
+
+## Motivation (aka "Huh?")
 
 Imagine that you were asked to model user behavior on a website. You
 might need to do this in order to drive some sort of test. One obvious
@@ -35,14 +65,7 @@ to model an asynchronous event.
 causatum attempts to provide a library with exactly those
 capabilities.
 
-# Usage
-
-> cau·sa·tum noun \kau̇ˈzätəm, kȯˈzāt-\
-> pl causa·ta
->
-> : something that is caused : effect
-
-[Merriam-Webster Online Dictionary](http://www.merriam-webster.com/dictionary/causatum)
+## Usage
 
 The main activity performed by causatum is the generation of streams
 of _events_. An event is a map with at least `:state` and `:rtime`
@@ -103,10 +126,11 @@ present when modeling a site that has high load during certain times
 of the day, week, or year.
 
 The primary function used to generate streams of events is
-`causatum.core/event-stream`, which takes both a model and another
-event stream. This allows the output of one model to function as the
-input of another. This input can come from anywhere, however, and need
-not be the return value of another call to `event-stream`. For instance:
+`causatum.event-streams/event-stream`, which takes both a model and
+another event stream. This allows the output of one model to function
+as the input of another. This input can come from anywhere, however,
+and need not be the return value of another call to `event-stream`.
+For instance:
 
 ```clojure
 (def model {:graph {:a [{:b {:weight 1 :delay [:constant 1]}
@@ -159,7 +183,7 @@ them. It also becomes possible to manipulate models using the same
 techniques we apply to other data. Functions for manipulating models
 to iterate towards a goal are defined in the `causatum.evolution`
 namespace. For an interesting example of that code, see
-`doc/evolution-example.clj`.
+[doc/evolution-example.clj]().
 
 ## License
 
