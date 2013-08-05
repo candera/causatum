@@ -48,68 +48,6 @@
 
 ;;; Event stream generation
 
-;; TODO: Fix up all the terms to match what's in here.
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; State machine-based event streams
-;;
-;; Event times are recorded relative to a notional start time of zero.
-;; Noted within the api as an `rtime`.
-;;
-;; An agenda (an internal implementation detail of this library) is a
-;; sorted map whose keys are a relative time whose values are a
-;; sequence of events.
-;;
-;; An event is a map with at least :state and :rtime keys.
-;;
-;; State transitions are modeled using state transition graphs. A
-;; graph is a map of outbound states to sequences of consequents.
-;; Consequents are maps of candidate states to transition
-;; descriptions. A transition description is a map containing :weight
-;; and :delay keys, which respectively describe the relatitvely
-;; likelihood of that transition and how long it will take.
-;;
-;; {:home        [{:home         {:weight    1
-;;                                :delay [:new-browser-interarrival-time]}}
-;;                {:inactive     {:weight    1
-;;                                :delay [:rand-exp 1]}
-;;                 :view-product {:weight    2
-;;                                :delay [:rand-exp 10]}}]
-;;  :inactive     [{:view-product {:weight    1
-;;                                 :delay [:rand-exp 100]}
-;;                  :home         {:weight    0.1
-;;                                 :delay [:rand-exp 100]}}]
-;;  :view-product [{:inactive     {:weight    1
-;;                                 :delay [:constant 0]}
-;;                  :gone         {:weight    2
-;;                                 :delay [:constant 0]}
-;;                  :view-product {:weight    3
-;;                                 :delay [:rand-exp 1000]}}]
-;;  }
-;;
-;; An individual option:
-;;
-;; {:inactive     {:weight 1
-;;                 :delay [:constant 1]}
-;;  :view-product {:weight 2
-;;                 :delay [:some-function]}
-;;
-;; The value of :delay is a vector whose first element is a keyword
-;; indicating the algorithm to use for generating delays. The
-;; algorithm is mapped to a function via the delay-fns argument of the
-;; functions below. The function will be called with the current rtime
-;; as the first argument and the other elements (if any) of the :delay
-;; vector, and is expected to return an amount of time to delay until
-;; the successor state is achieved. If delay is absent, a constant
-;; value of zero will be used.
-;;
-;; Events are created by an event-ctor, which is a function of a
-;; previous event and a successor. A successor is one of the values
-;; from an edge descriptor with a :state key associated indicating the
-;; target state. If the event-ctor returns nil, the successor is used
-;; as-is.
-
 (defn cumulative-weight
   "Given an edge descriptor map, returns a [total odds] pair, where
   total is the total weight, and odds is a seq of [cumul target]
