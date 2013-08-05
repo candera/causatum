@@ -3,14 +3,6 @@
   machine models."
   (:require [clojure.data.generators :as dg]))
 
-;;; Things that should live in clojure.data.generators
-
-(defn rand-exp
-  "Return an exponentially-distributed random number with an expected
-  value of lambda"
-  [lambda]
-  (- (* (Math/log (dg/double)) lambda)))
-
 ;;; Validation
 
 (defn- seq-of-maps?
@@ -56,6 +48,8 @@
 
 ;;; Event stream generation
 
+;; TODO: Fix up all the terms to match what's in here.
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; State machine-based event streams
@@ -69,13 +63,12 @@
 ;;
 ;; An event is a map with at least :state and :rtime keys.
 ;;
-;; State transitions are modeled as sort-of Markov chains, which are
-;; maps of the current state to edge descriptors. An edge descriptor
-;; is a vector of maps from new states to descriptions of how likely
-;; those states are and how long the transition takes. Consider the
-;; example of modeling the behavior of a user who arrives at the home
-;; page, then goes and looks at a few product pages, then goes away
-;; for a while or maybe forever:
+;; State transitions are modeled using state transition graphs. A
+;; graph is a map of outbound states to sequences of consequents.
+;; Consequents are maps of candidate states to transition
+;; descriptions. A transition description is a map containing :weight
+;; and :delay keys, which respectively describe the relatitvely
+;; likelihood of that transition and how long it will take.
 ;;
 ;; {:home        [{:home         {:weight    1
 ;;                                :delay [:new-browser-interarrival-time]}}
@@ -95,7 +88,7 @@
 ;;                                 :delay [:rand-exp 1000]}}]
 ;;  }
 ;;
-;; An individual edge descriptor:
+;; An individual option:
 ;;
 ;; {:inactive     {:weight 1
 ;;                 :delay [:constant 1]}
