@@ -1,4 +1,4 @@
-(ns causatum.core
+(ns causatum.event-streams
   "Functions for generating event streams based on stochastic state
   machine models."
   (:require [clojure.data.generators :as dg]))

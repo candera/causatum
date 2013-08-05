@@ -1,4 +1,4 @@
-(require '[causatum.core :refer :all])
+(require '[causatum.event-streams :refer :all])
 (require '[causatum.evolution :as ev])
 (require '[causatum.util :as util])
 (require '[clojure.data.generators :as dg])

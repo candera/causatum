@@ -1,5 +1,5 @@
-(ns causatum.core-test
-  (:require [causatum.core :refer :all]
+(ns causatum.event-streams-test
+  (:require [causatum.event-streams :refer :all]
             [clojure.data.generators :as dg]
             [clojure.set :as set]
             [clojure.test :refer :all]))
