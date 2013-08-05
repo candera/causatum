@@ -200,8 +200,7 @@ Models may contain a `:event-ctor` key. If present, its value must be
 a function: the _event constructor_. The event constructor will be
 invoked whenever an event is created, and will be passed the outbound
 event and the candidate successor event. The return value will be used
-as the actual successor event. The default implementation just uses
-the candidate successor event.
+as the actual successor event.
 
 One handy use for event constructors is to propagate context
 information along a causal chain. For instance, we might seed a model
@@ -211,6 +210,15 @@ could then propagate that user ID through all events in a causal
 chain. Say, something like this:
 
 ```clojure
+(def model {:graph {:home [{:home {:weight 1 :delay [:constant 1]}
+                            :page1 {:weight 1 :delay [:constant 2]}
+                            :gone {:weight 1}}]
+                    :page1 [{:home {:weight 1 :delay [:constant 1]}
+                             :page1 {:weight 1 :delay [:constant 2]}
+                             :gone {:weight 1}}]}
+            :delay-ops {:constant (fn [rtime delay] delay)}
+            :event-ctor merge})
+
 (->> (event-stream model
                    (map
                     ;; User ID is just their arrival time.
@@ -233,7 +241,19 @@ chain. Say, something like this:
  {:user-id 2558, :rtime 2559, :state :home})
 ```
 
-And of course you can propagate the information however you like.
+Of course, this is identical to what the default event constructor
+does, so there's really no need to call it out explicitly. But if you
+have other event creation logic you'd like to run at event generation
+time, you can do it here.
+
+It's probably best to avoid using event constructors if at all
+possible, as any advanced usage of them moves important information
+about your model from data into code. Prefer to model the underlying
+process and then provide post-processing over the event stream when
+possible.
+
+Support for event constructors may be removed in future releases of
+causatum. Feedback welcome.
 
 ## License
 
