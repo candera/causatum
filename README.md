@@ -229,7 +229,7 @@ chain. Say, something like this:
  {:user-id 2558, :rtime 2559, :state :home})
 ```
 
-And of course you can propage the information however you like.
+And of course you can propagate the information however you like.
 
 ## License
 
