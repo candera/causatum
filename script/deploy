@@ -1,0 +1,6 @@
+#!/bin/bash
+
+lein clean
+lein pom
+lein jar
+scp pom.xml target/provided/causatum-*.jar clojars@clojars.org:
