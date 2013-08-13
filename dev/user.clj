@@ -17,10 +17,7 @@
         [now-rtime now-events] (first future-events*)
         new-events (mapcat #(generate model % now-rtime) now-events)
         rest-future-events (dissoc future-events* now-rtime)
-        updated-future-events (merge-event-stream rest-future-events new-events)
-        updated-future-events* (if (seq updated-future-events)
-                                 updated-future-events
-                                 {(:rtime (first event-stream)) [(first event-stream)]})]
+        updated-future-events (merge-event-stream rest-future-events new-events)]
     {:event-stream      (concat (take 3 event-stream) ['...])
      :future-events     future-events
      :head-rtime        head-rtime
@@ -31,6 +28,5 @@
      :now-events        now-events
      :new-events new-events
      :rest-future-events rest-future-events
-     :updated-future-events updated-future-events
-     :updated-future-events* updated-future-events*}))
+     :updated-future-events updated-future-events}))
 
