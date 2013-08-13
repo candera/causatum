@@ -138,50 +138,31 @@
    event-map
    event-stream))
 
-(defn next-agenda
-  "Given an model and an agenda, generates new events based on the events at the
-  head of the agenda, removes the events at the head, and returns a
-  new agenda with the new events inserted."
-  [model agenda]
-  ;; TODO: I think there must be a better way to express all this
-  (let [{:keys [event-stream future-events]} agenda
-        head-rtime (min (-> future-events ffirst (or Double/POSITIVE_INFINITY))
-                        (-> event-stream first :rtime (or Double/POSITIVE_INFINITY)))
-        [event-stream-head event-stream-tail] (split-with #(<= (:rtime %) head-rtime)
-                                                          event-stream)
-        future-events* (merge-event-stream future-events event-stream-head)
-        [now-rtime now-events] (first future-events*)
-        new-events (mapcat #(generate model % now-rtime) now-events)
-        rest-future-events (dissoc future-events* now-rtime)
-        updated-future-events (merge-event-stream rest-future-events new-events)]
-    (if (empty? updated-future-events)
-      (let [next-rtime (-> event-stream first :rtime)
-            [head-events rest-events] (split-with #(<= (:rtime %) next-rtime) event-stream)]
-        (-> agenda
-            (assoc :future-events (merge-event-stream updated-future-events head-events))
-            (assoc :event-stream rest-events)))
-      (-> agenda
-          (assoc :future-events updated-future-events)
-          (assoc :event-stream event-stream-tail)))))
-
-(defn agenda
-  "Creates a new agenda that is seeded with events from `event-stream`."
-  [event-stream]
-  (let [first-rtime (-> event-stream first :rtime)
-        [first-events rest-events] (split-with #(= first-rtime (:rtime %))
-                                               event-stream)]
-    {:event-stream rest-events
-     :future-events (merge-event-stream (sorted-map) first-events)}))
+;; Yes it's weird that this is its own function. But it lets me write
+;; a test to verify that the agenda doesn't grow unbounded over
+;; time, which was a big bug in v0.1.0.
+(defn- next-state
+  "Calculate the tuple [now-events next-event-stream next-agenda] given
+  the model, the current event stream and the current agenda."
+  [model event-stream agenda]
+  (let [now-rtime         (min (-> agenda ffirst (or Double/POSITIVE_INFINITY))
+                               (-> event-stream first :rtime (or Double/POSITIVE_INFINITY)))
+        [es-now-events
+         es-later-events] (split-with #(<= (:rtime %) now-rtime)
+                                      event-stream)
+        agenda-now-events (get agenda now-rtime)
+        agenda-later      (dissoc agenda now-rtime)
+        now-events        (into agenda-now-events es-now-events)
+        generated-events  (mapcat #(generate model % now-rtime) now-events)]
+    [now-events es-later-events (merge-event-stream agenda-later generated-events)]))
 
 (defn- event-stream-generator
-  "Given a model and an agenda, generates an infinite sequence of
-  events."
-  [model agenda]
-  (let [[rtime events] (-> agenda :future-events first)]
-    (when (seq events)
-      (lazy-cat events
-                (event-stream-generator model
-                                        (next-agenda model agenda))))))
+  "Given a model, an event stream and an agenda, generates a
+  potentially infinite sequence of events."
+  [model event-stream agenda]
+  (let [[now-events next-event-stream next-agenda] (next-state model event-stream agenda)]
+    (when (seq now-events)
+      (lazy-cat now-events (event-stream-generator model next-event-stream next-agenda)))))
 
 (defn event-stream
   "Given a model and a seeding event-stream, generates a (lazy,
@@ -196,6 +177,6 @@
   return the actual successor event."
   [model event-stream]
   (assert-model-valid model)
-  (event-stream-generator model (agenda event-stream)))
+  (event-stream-generator model event-stream (sorted-map)))
 
 

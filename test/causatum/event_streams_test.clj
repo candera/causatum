@@ -1,12 +1,14 @@
 (ns causatum.event-streams-test
   (:require [causatum.event-streams :refer :all]
+            [causatum.util]
             [clojure.data.generators :as dg]
             [clojure.set :as set]
             [clojure.test :refer :all]))
 
 ;; The delay operations we use during the tests
 (def delay-ops
-  {:constant (fn [rtime delay] delay)})
+  {:constant (fn [rtime delay] delay)
+   :rand-exp (fn [rtime mean] (causatum.util/rand-exp mean))})
 
 (defn- simplify
   "Boils its input down to an [rtime state] pair for easy comparison."
@@ -39,6 +41,12 @@
                      (within-tolerance? v prob tol)))
                  freqs))))
 
+(defn- rtime-ordered?
+  "Returns true if the event sequence is monotonically nondecreasing in rtime."
+  [events]
+  (->> (map vector events (drop 1 events))
+       (every? (fn [[e1 e2]] (<= (:rtime e1) (:rtime e2))))))
+
 (defmacro throws?
   "Returns true if body throws an exception"
   [body])
@@ -47,14 +55,20 @@
   (testing "Agendas don't grow too much"
     (let [model {:graph {:a [{:b {}}]}}
           seed-events (map (fn [rtime] {:state :a :rtime rtime}) (iterate inc 0))]
-      ;; If there's more than one item in :future-events, it means
-      ;; we're keeping track of too many things. v0.1.0 had a bug in
-      ;; it that led to memory growth over time.
-      (is (>= 1 (->> (agenda seed-events)
-                    (iterate #(next-agenda model %))
-                    (drop 100)
+      ;; Yes it's weird that we're testing a private function. It's
+      ;; even weirder that that function exists, but if there's more
+      ;; than one item in :future-events, it means we're keeping track
+      ;; of too many things. v0.1.0 had a bug in it that led to memory
+      ;; growth over time. It's important to avoid that.
+      ;;
+      ;; TODO: Validate this through a functional test instead of a
+      ;; unit test.
+      (is (>= 1 (-> (->> (iterate (fn [[events event-stream agenda]]
+                                    (@#'causatum.event-streams/next-state model event-stream agenda))
+                                  [[] seed-events (sorted-map)])
+                         (drop 100))
                     first
-                    :future-events
+                    (nth 2)
                     count))))))
 
 (deftest event-stream-tests
@@ -102,7 +116,8 @@
                                                     :b [{:a {:weight 1}
                                                          :b {:weight 3}}]}}
                                            [{:rtime 0 :state :a}])
-                             (take 1000))))))
+                             (take 1000)
+                             doall)))))
     (testing "Unbound delay op throws"
       (is (thrown? clojure.lang.ExceptionInfo
                    (dorun (event-stream {:graph {:a [{:b {:delay [:unspecified]}}]}
@@ -127,6 +142,12 @@
                                      (iterate inc 0)))
                   (drop 20)
                   (take 4)
-                  (map simplify)))))))
-
-
+                  (map simplify)))))
+    (testing "Out-of-order event bug is gone"
+      (is (rtime-ordered?
+           (binding [dg/*rnd* (java.util.Random. 42)]
+             (doall (event-stream {:graph {:a [{:b {:weight 1 :delay [:rand-exp 1.0]}
+                                                :c {:weight 1 :delay [:rand-exp 1.0]}}]}
+                                   :delay-ops delay-ops}
+                                  (map (fn [rtime] {:state :a :rtime rtime})
+                                       (range 100))))))))))
