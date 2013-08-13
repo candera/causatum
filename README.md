@@ -12,7 +12,7 @@ on stochastic state machines.
 
 ## Quick Start
 
-* Add `[org.craigandera/causatum "0.1.0"]` to your dependencies in `project.clj`.
+* Add `[org.craigandera/causatum "0.3.0"]` to your dependencies in `project.clj`.
 * Create a simple model:
 
 ```clojure
