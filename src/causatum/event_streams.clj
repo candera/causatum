@@ -143,9 +143,10 @@
   head of the agenda, removes the events at the head, and returns a
   new agenda with the new events inserted."
   [model agenda]
+  ;; TODO: I think there must be a better way to express all this
   (let [{:keys [event-stream future-events]} agenda
-        head-rtime (or (-> future-events first :rtime)
-                       (-> event-stream first :rtime))
+        head-rtime (min (-> future-events ffirst (or Double/POSITIVE_INFINITY))
+                        (-> event-stream first :rtime (or Double/POSITIVE_INFINITY)))
         [event-stream-head event-stream-tail] (split-with #(<= (:rtime %) head-rtime)
                                                           event-stream)
         future-events* (merge-event-stream future-events event-stream-head)
@@ -153,9 +154,15 @@
         new-events (mapcat #(generate model % now-rtime) now-events)
         rest-future-events (dissoc future-events* now-rtime)
         updated-future-events (merge-event-stream rest-future-events new-events)]
-    (-> agenda
-        (assoc :future-events updated-future-events)
-        (assoc :event-stream event-stream-tail))))
+    (if (empty? updated-future-events)
+      (let [next-rtime (-> event-stream first :rtime)
+            [head-events rest-events] (split-with #(<= (:rtime %) next-rtime) event-stream)]
+        (-> agenda
+            (assoc :future-events (merge-event-stream updated-future-events head-events))
+            (assoc :event-stream rest-events)))
+      (-> agenda
+          (assoc :future-events updated-future-events)
+          (assoc :event-stream event-stream-tail)))))
 
 (defn agenda
   "Creates a new agenda that is seeded with events from `event-stream`."

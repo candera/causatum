@@ -43,6 +43,20 @@
   "Returns true if body throws an exception"
   [body])
 
+(deftest agenda-tests
+  (testing "Agendas don't grow too much"
+    (let [model {:graph {:a [{:b {}}]}}
+          seed-events (map (fn [rtime] {:state :a :rtime rtime}) (iterate inc 0))]
+      ;; If there's more than one item in :future-events, it means
+      ;; we're keeping track of too many things. v0.1.0 had a bug in
+      ;; it that led to memory growth over time.
+      (is (>= 1 (->> (agenda seed-events)
+                    (iterate #(next-agenda model %))
+                    (drop 100)
+                    first
+                    :future-events
+                    count))))))
+
 (deftest event-stream-tests
   (testing "Event stream generation."
     (testing "Null model and input stream produces an empty event stream."
@@ -100,6 +114,19 @@
                                              {:c {:delay [:constant 1]}}]}
                                  :delay-ops delay-ops}
                                 [{:rtime 0 :state :a}])
+                  (map simplify)))))
+    (testing "Input stream of length greater than one"
+      (is (= 20
+             (count (event-stream {:graph {:a [{:b {}}]}}
+                                  (map (fn [rtime] {:state :a :rtime rtime})
+                                       (range 10)))))))
+    (testing "Infinite input event stream"
+      (is (= [[10 :a] [10 :b] [11 :a] [11 :b]]
+             (->> (event-stream {:graph {:a [{:b {}}]}}
+                                (map (fn [rtime] {:state :a :rtime rtime})
+                                     (iterate inc 0)))
+                  (drop 20)
+                  (take 4)
                   (map simplify)))))))
 
 
