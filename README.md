@@ -1,6 +1,6 @@
 # causatum
 
-> cau·sa·tum noun \kau̇ˈzätəm, kȯˈzāt-\
+> cau·sa·tum noun \kau̇ˈzätəm, kȯˈzāt-\
 > pl causa·ta
 >
 > : something that is caused : effect
@@ -99,7 +99,7 @@ leave forever (`:gone`).
          :product [{:home    {:weight 1
                               :delay [:random 10]}
                     :cart    {:weight 3
-                              :delay [:contant 4]}
+                              :delay [:constant 4]}
                     :gone    {:weight 2}}]
          :cart      [{:home  {:weight 4
                               :delay [:constant 17]}
