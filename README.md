@@ -66,7 +66,7 @@ relative likelihoods. Something more like this might be better:
 
 Even that isn't quite right, since the delays are fixed, but in the
 real world delays vary. Further, there's no real reason that a state
-like :home-page can't have more than one follow-on state, for instance
+like :home can't have more than one follow-on state, for instance
 to model an asynchronous event.
 
 causatum attempts to provide a library with exactly those
@@ -111,7 +111,7 @@ leave forever (`:gone`).
 
 The value of the `:graph` key is a map of outbound states to vectors
 of maps. One new event will be generated for each of the maps in those
-vectors. So in our example above, `:home-page` events will always
+vectors. So in our example above, `:home` events will always
 produce one outbound events, but a `:cart` event will produce two
 outbound events.
 
