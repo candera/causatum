@@ -10,6 +10,12 @@
 A Clojure library designed to generate streams of timed events based
 on stochastic state machines.
 
+## Liveness Advisory
+
+"I see the only thing you've changed in a year is the README. Is this project still alive?"
+
+Yep. As of this writing (25-Sep-2014) I consider this library alive and well, and expect it to continue to be so. The reason there haven't been any updates is that although I can think of changes I'd like to make, the darn thing just works: the changes would essentially be cosmetic. I feel comfortable recommending it for your use as well.
+
 ## Quick Start
 
 * Add `[org.craigandera/causatum "0.3.0"]` to your dependencies in `project.clj`.
