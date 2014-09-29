@@ -107,10 +107,10 @@ leave forever (`:gone`).
                     :cart    {:weight 3
                               :delay [:constant 4]}
                     :gone    {:weight 2}}]
-         :cart      [{:home  {:weight 4
+         :cart    [{:home    {:weight 4
                               :delay [:constant 17]}
-                      :gone  {:weight 1}}
-                     {:process-order {}}]}
+                    :gone    {:weight 1}}
+                   {:process-order {}}]}
  :delay-ops {:constant (fn [rtime n] n)
              :random   (fn [rtime n] (rand n))}}
 ```
