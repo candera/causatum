@@ -16,6 +16,8 @@ on stochastic state machines.
 
 Yep. As of this writing (25-Sep-2014) I consider this library alive and well, and expect it to continue to be so. The reason there haven't been any updates is that although I can think of changes I'd like to make, the darn thing just works: the changes would essentially be cosmetic. I feel comfortable recommending it for your use as well.
 
+Update 2017-Oct-16: Still true. :)
+
 ## Quick Start
 
 * Add `[org.craigandera/causatum "0.3.0"]` to your dependencies in `project.clj`.
